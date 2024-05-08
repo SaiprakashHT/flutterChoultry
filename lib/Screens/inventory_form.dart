@@ -1,19 +1,18 @@
 import 'dart:convert';
-import 'package:choultry/Screens/add_choultries.dart';
-import 'package:choultry/Screens/dashboard.dart';
-// import 'package:choultry/rounded_button.dart';
+// import 'package:inventory/Screens/add_choultries.dart';
+// import 'package:inventory/rounded_button.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class InventoryForm extends StatefulWidget {
+  const InventoryForm({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<InventoryForm> createState() => _InventoryFormState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _InventoryFormState extends State<InventoryForm> {
   List<dynamic> _data = [];
 
   @override
@@ -22,16 +21,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     fetchData();
   }
 
-  addChoultry() {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (BuildContext context) => CreateChoultries(),
-        ));
-  }
-
   Future<void> fetchData() async {
-    var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/');
+    var url = Uri.parse('http://10.0.2.2:8000/api/auth/inventories/');
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'access_token');
 
@@ -57,22 +48,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> submitChoultry(
+  Future<void> submitInventory(
       String name,
-      String address,
-      String pin,
-      String phone_number,
-      String email,
-      String pname,
+      String price,
+      String stock,
+      String igst,
+      String sgst,
+      String cgst,
+      String user_id,
       String id,
       String httpMethod) async {
     Map data = {
       'name': name,
-      'address': address,
-      'pin': pin,
-      'phone_number': phone_number,
-      'email': email,
-      'pname': pname,
+      'price': price,
+      'stock': stock,
+      'igst': igst,
+      'sgst': sgst,
+      'cgst': cgst,
+      'user_id': user_id,
       'id': id
     };
 
@@ -86,20 +79,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     };
     final response;
     if (httpMethod == 'edit') {
-      var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/$id');
+      var url = Uri.parse('http://10.0.2.2:8000/api/auth/inventories/$id');
       response = await http.put(
         url,
         headers: headerObj,
         body: json.encode(data),
       );
     } else if (httpMethod == 'delete') {
-      var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/$id');
+      var url = Uri.parse('http://10.0.2.2:8000/api/auth/inventories/$id');
       response = await http.delete(
         url,
         headers: headerObj,
       );
     } else {
-      var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/');
+      var url = Uri.parse('http://10.0.2.2:8000/api/auth/inventories/');
       response = await http.post(
         url,
         headers: headerObj,
@@ -107,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    debugPrint('response11 ${response.body}');
+    debugPrint('response11 ${response}');
     debugPrint('response code ${response.statusCode}');
     if (response.statusCode == 200) {
       // If the server did return a 201 CREATED response,
@@ -116,32 +109,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } else {
       // If the server did not return a 201 CREATED response,
       // then throw an exception.
-      throw Exception('Failed to create choultry.');
+      throw Exception('Failed to create Inventory.');
     }
   }
 
-  void formChoultry(Map<String, dynamic> choultry) {
+  void formInventory(Map<String, dynamic> inventory) {
     // Implement editing functionality here
     // You can display a dialog similar to the one used for adding choultries
-    debugPrint('choultry form $choultry');
+    debugPrint('inventory form $inventory');
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String choultryName = ("${choultry['name'] ?? ""}");
-        String choultryAddress = ("${choultry['address'] ?? ""}");
-        String choultryPin = ("${choultry['pin'] ?? ""}");
-        String phoneNumber = ("${choultry['phone_number'] ?? ""}");
-        String email = ("${choultry['email'] ?? ""}");
-        String pname = ("${choultry['pname'] ?? ""}");
-        String id = ("${choultry['id'] ?? ""}");
+        String name = ("${inventory['name'] ?? ""}");
+        String price = ("${inventory['price'] ?? ""}");
+        String stock = ("${inventory['stock'] ?? ""}");
+        String igst = ("${inventory['igst'] ?? ""}");
+        String sgst = ("${inventory['sgst'] ?? ""}");
+        String cgst = ("${inventory['cgst'] ?? ""}");
+        String user_id = ("${inventory['user_id'] ?? ""}");
+        String id = ("${inventory['id'] ?? ""}");
         String httpMethod;
         var title;
         if (id != '') {
           httpMethod = 'edit';
-          title = const Text('Edit Choultry');
+          title = const Text('Edit Inventory');
         } else {
           httpMethod = 'add';
-          title = const Text('Add Choultry');
+          title = const Text('Add Inventory');
         }
         return AlertDialog(
           title: title,
@@ -151,46 +145,53 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 TextField(
                   onChanged: (value) {
-                    choultryName = value;
+                    name = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Choultry Name'),
-                  controller: TextEditingController(text: choultryName),
+                  decoration: const InputDecoration(labelText: 'Inventory Name'),
+                  controller: TextEditingController(text: name),
                 ),
                 TextField(
                   onChanged: (value) {
-                    choultryAddress = value;
+                    price = value;
                   },
                   decoration:
-                      const InputDecoration(labelText: 'Choultry Address'),
-                  controller: TextEditingController(text: choultryAddress),
+                      const InputDecoration(labelText: 'Price'),
+                  controller: TextEditingController(text: price),
                 ),
                 TextField(
                   onChanged: (value) {
-                    choultryPin = value;
+                    stock = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Choultry Pin'),
-                  controller: TextEditingController(text: choultryPin),
+                  decoration: const InputDecoration(labelText: 'Stock'),
+                  controller: TextEditingController(text: stock),
                 ),
                 TextField(
                   onChanged: (value) {
-                    phoneNumber = value;
+                    igst = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  controller: TextEditingController(text: phoneNumber),
+                  decoration: const InputDecoration(labelText: 'Igst'),
+                  controller: TextEditingController(text: igst),
                 ),
                 TextField(
                   onChanged: (value) {
-                    email = value;
+                    sgst = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  controller: TextEditingController(text: email),
+                  decoration: const InputDecoration(labelText: 'Sgst'),
+                  controller: TextEditingController(text: sgst),
                 ),
                 TextField(
                   onChanged: (value) {
-                    pname = value;
+                    cgst = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Pname'),
-                  controller: TextEditingController(text: pname),
+                  decoration: const InputDecoration(labelText: 'Cgst'),
+                  controller: TextEditingController(text: cgst),
+                ),
+                TextField(
+                  onChanged: (value) {
+                    user_id = value;
+                  },
+                  decoration: const InputDecoration(labelText: 'user_id'),
+                  controller: TextEditingController(text: user_id),
                 ),
               ],
             ),
@@ -204,11 +205,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             TextButton(
               onPressed: () async {
-                // Call the API to update choultry with the new details
+                // Call the API to update inventory with the new details
                 // Assuming there is an endpoint for updating choultries
                 // Navigator.pop(context);
-                await submitChoultry(choultryName, choultryAddress, choultryPin,
-                    phoneNumber, email, pname, id, httpMethod);
+                await submitInventory(name, price, stock,
+                    igst, sgst, cgst, user_id, id, httpMethod);
                 Navigator.pop(context);
               },
               child: const Text('Update'),
@@ -219,13 +220,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void deleteConfirmation(Map<String, dynamic> choultry, BuildContext context) {
+  void deleteConfirmation(Map<String, dynamic> inventory, BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Confirm Deletion"),
-          content: Text("Are you sure you want to delete ${choultry['name']}?"),
+          content: Text("Are you sure you want to delete ${inventory['name']}?"),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -235,14 +236,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             TextButton(
               onPressed: () {
-                submitChoultry(
+                submitInventory(
                   '',
                   '',
                   '',
                   '',
                   '',
                   '',
-                  choultry['id'].toString(),
+                  '',
+                  inventory['id'].toString(),
                   'delete',
                 );
                 Navigator.of(context).pop(); // Close the dialog
@@ -258,56 +260,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        toolbarHeight: 70,
-        centerTitle: true,
-        elevation: 0,
-        title: const Text(
-          "Choultries",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-
-      // body: ListView.builder(
-      //   itemCount: _data.length,
-      //   itemBuilder: (context, index) {
-      //     _data[index]['httpMethod'] = 'delete';
-      //     return ListTile(
-      //       title: Text(_data[index]['name']),
-      //       trailing: Row(
-      //         mainAxisSize: MainAxisSize.min,
-      //         children: [
-      //           IconButton(
-      //             icon: Icon(Icons.edit),
-      //             onPressed: () {
-      //               formChoultry(_data[index]);
-      //             },
-      //           ),
-      //           IconButton(
-      //             icon: Icon(Icons.delete),
-      //             onPressed: () {
-      //                 submitChoultry(
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   _data[index]['id'].toString(),
-      //                   'delete'
-      //                 );
-      //             },
-      //           ),
-      //         ],
-      //       ),
-      //     );
-      //   },
-      // ),
+        backgroundColor: Colors.blue.shade100,
+        title: const Text('Inventory Form'),
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(Icons.add), // Add your custom icon here
+      //       onPressed: () {
+      //         // Add functionality for saving form data here
+      //         print('Form data saved');
+      //       },
+      //     ),
+      //   ],
+       ),
       body: SingleChildScrollView(
         child: DataTable(
           columns: const [
@@ -317,8 +282,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
           rows: _data.asMap().entries.map<DataRow>((entry) {
             final index = entry.key;
-            final choultry = entry.value;
-            choultry['httpMethod'] = 'delete';
+            final inventory = entry.value;
+            inventory['httpMethod'] = 'delete';
             return DataRow(cells: [
               DataCell(Text((index + 1).toString())),
               DataCell(
@@ -329,11 +294,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            const DashboardScreen(),
+                            const InventoryForm(),
                       ),
                     );
                   },
-                  child: Text(choultry['name']),
+                  child: Text(inventory['name']),
                 ),
               ),
               DataCell(Row(
@@ -342,13 +307,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   IconButton(
                     icon: Icon(Icons.edit),
                     onPressed: () {
-                      formChoultry(choultry);
+                      formInventory(inventory);
                     },
                   ),
                   IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () {
-                      deleteConfirmation(choultry, context);
+                      deleteConfirmation(inventory, context);
                     },
                   ),
                 ],
@@ -357,11 +322,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           }).toList(),
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Open a dialog to enter choultry details
-          formChoultry({});
+          // Open a dialog to enter inventory details
+          formInventory({});
         },
         child: Icon(Icons.add),
       ),

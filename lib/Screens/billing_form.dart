@@ -1,19 +1,18 @@
 import 'dart:convert';
-import 'package:choultry/Screens/add_choultries.dart';
-import 'package:choultry/Screens/dashboard.dart';
-// import 'package:choultry/rounded_button.dart';
+// import 'package:bill/Screens/add_choultries.dart';
+// import 'package:bill/rounded_button.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class BillingForm extends StatefulWidget {
+  const BillingForm({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<BillingForm> createState() => _BillingFormState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _BillingFormState extends State<BillingForm> {
   List<dynamic> _data = [];
 
   @override
@@ -22,16 +21,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     fetchData();
   }
 
-  addChoultry() {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (BuildContext context) => CreateChoultries(),
-        ));
-  }
-
   Future<void> fetchData() async {
-    var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/');
+    var url = Uri.parse('http://10.0.2.2:8000/api/auth/bills/');
     const storage = FlutterSecureStorage();
     final token = await storage.read(key: 'access_token');
 
@@ -57,22 +48,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> submitChoultry(
-      String name,
-      String address,
-      String pin,
-      String phone_number,
-      String email,
-      String pname,
+  Future<void> submitBill(
+      String booking_id,
+      String customer_name,
+      String customer_phone,
+      String customer_address,
+      String customer_gst,
+      String bill_no,
+      String paid,
+      String paid_date_time,
       String id,
       String httpMethod) async {
     Map data = {
-      'name': name,
-      'address': address,
-      'pin': pin,
-      'phone_number': phone_number,
-      'email': email,
-      'pname': pname,
+      'booking_id': booking_id,
+      'customer_name': customer_name,
+      'customer_phone': customer_phone,
+      'customer_address': customer_address,
+      'customer_gst': customer_gst,
+      'bill_no': bill_no,
+      'paid': paid,
+      'paid_date_time': paid_date_time,
       'id': id
     };
 
@@ -86,20 +81,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     };
     final response;
     if (httpMethod == 'edit') {
-      var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/$id');
+      var url = Uri.parse('http://10.0.2.2:8000/api/auth/bills/$id');
       response = await http.put(
         url,
         headers: headerObj,
         body: json.encode(data),
       );
     } else if (httpMethod == 'delete') {
-      var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/$id');
+      var url = Uri.parse('http://10.0.2.2:8000/api/auth/bills/$id');
       response = await http.delete(
         url,
         headers: headerObj,
       );
     } else {
-      var url = Uri.parse('http://10.0.2.2:8000/api/auth/choutries/');
+      var url = Uri.parse('http://10.0.2.2:8000/api/auth/bills/');
       response = await http.post(
         url,
         headers: headerObj,
@@ -107,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       );
     }
 
-    debugPrint('response11 ${response.body}');
+    debugPrint('response11 ${response}');
     debugPrint('response code ${response.statusCode}');
     if (response.statusCode == 200) {
       // If the server did return a 201 CREATED response,
@@ -116,32 +111,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     } else {
       // If the server did not return a 201 CREATED response,
       // then throw an exception.
-      throw Exception('Failed to create choultry.');
+      throw Exception('Failed to create bill.');
     }
   }
 
-  void formChoultry(Map<String, dynamic> choultry) {
+  void formBill(Map<String, dynamic> bill) {
     // Implement editing functionality here
     // You can display a dialog similar to the one used for adding choultries
-    debugPrint('choultry form $choultry');
+    debugPrint('bill form $bill');
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        String choultryName = ("${choultry['name'] ?? ""}");
-        String choultryAddress = ("${choultry['address'] ?? ""}");
-        String choultryPin = ("${choultry['pin'] ?? ""}");
-        String phoneNumber = ("${choultry['phone_number'] ?? ""}");
-        String email = ("${choultry['email'] ?? ""}");
-        String pname = ("${choultry['pname'] ?? ""}");
-        String id = ("${choultry['id'] ?? ""}");
+        String booking_id = ("${bill['booking_id'] ?? ""}");
+        String customer_name = ("${bill['customer_name'] ?? ""}");
+        String customer_phone = ("${bill['customer_phone'] ?? ""}");
+        String customer_address = ("${bill['customer_address'] ?? ""}");
+        String customer_gst = ("${bill['customer_gst'] ?? ""}");
+        String bill_no = ("${bill['bill_no'] ?? ""}");
+        String paid = ("${bill['paid'] ?? ""}");
+        String paid_date_time = ("${bill['paid_date_time'] ?? ""}");
+        String id = ("${bill['id'] ?? ""}");
         String httpMethod;
         var title;
         if (id != '') {
           httpMethod = 'edit';
-          title = const Text('Edit Choultry');
+          title = const Text('Edit bill');
         } else {
           httpMethod = 'add';
-          title = const Text('Add Choultry');
+          title = const Text('Add bill');
         }
         return AlertDialog(
           title: title,
@@ -151,46 +148,62 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 TextField(
                   onChanged: (value) {
-                    choultryName = value;
+                    booking_id = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Choultry Name'),
-                  controller: TextEditingController(text: choultryName),
+                  decoration: const InputDecoration(labelText: 'booking_id'),
+                  controller: TextEditingController(text: booking_id),
                 ),
                 TextField(
                   onChanged: (value) {
-                    choultryAddress = value;
+                    customer_name = value;
+                  },
+                  decoration: const InputDecoration(labelText: 'customer_name'),
+                  controller: TextEditingController(text: customer_name),
+                ),
+                TextField(
+                  onChanged: (value) {
+                    customer_phone = value;
                   },
                   decoration:
-                      const InputDecoration(labelText: 'Choultry Address'),
-                  controller: TextEditingController(text: choultryAddress),
+                      const InputDecoration(labelText: 'customer_phone'),
+                  controller: TextEditingController(text: customer_phone),
                 ),
                 TextField(
                   onChanged: (value) {
-                    choultryPin = value;
+                    customer_address = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Choultry Pin'),
-                  controller: TextEditingController(text: choultryPin),
+                  decoration:
+                      const InputDecoration(labelText: 'customer_address'),
+                  controller: TextEditingController(text: customer_address),
                 ),
                 TextField(
                   onChanged: (value) {
-                    phoneNumber = value;
+                    customer_gst = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  controller: TextEditingController(text: phoneNumber),
+                  decoration: const InputDecoration(labelText: 'customer_gst'),
+                  controller: TextEditingController(text: customer_gst),
                 ),
                 TextField(
                   onChanged: (value) {
-                    email = value;
+                    bill_no = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  controller: TextEditingController(text: email),
+                  decoration: const InputDecoration(labelText: 'bill_no'),
+                  controller: TextEditingController(text: bill_no),
                 ),
                 TextField(
                   onChanged: (value) {
-                    pname = value;
+                    paid = value;
                   },
-                  decoration: const InputDecoration(labelText: 'Pname'),
-                  controller: TextEditingController(text: pname),
+                  decoration: const InputDecoration(labelText: 'paid'),
+                  controller: TextEditingController(text: paid),
+                ),
+                TextField(
+                  onChanged: (value) {
+                    paid_date_time = value;
+                  },
+                  decoration:
+                      const InputDecoration(labelText: 'paid_date_time'),
+                  controller: TextEditingController(text: paid_date_time),
                 ),
               ],
             ),
@@ -204,11 +217,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             TextButton(
               onPressed: () async {
-                // Call the API to update choultry with the new details
+                // Call the API to update bill with the new details
                 // Assuming there is an endpoint for updating choultries
                 // Navigator.pop(context);
-                await submitChoultry(choultryName, choultryAddress, choultryPin,
-                    phoneNumber, email, pname, id, httpMethod);
+                await submitBill(
+                    booking_id,
+                    customer_name,
+                    customer_phone,
+                    customer_address,
+                    customer_gst,
+                    bill_no,
+                    paid,
+                    paid_date_time,
+                    id,
+                    httpMethod);
                 Navigator.pop(context);
               },
               child: const Text('Update'),
@@ -219,13 +241,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  void deleteConfirmation(Map<String, dynamic> choultry, BuildContext context) {
+  void deleteConfirmation(Map<String, dynamic> bill, BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Confirm Deletion"),
-          content: Text("Are you sure you want to delete ${choultry['name']}?"),
+          content:
+              Text("Are you sure you want to delete ${bill['customer_name']}?"),
           actions: <Widget>[
             TextButton(
               onPressed: () {
@@ -235,14 +258,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             TextButton(
               onPressed: () {
-                submitChoultry(
+                submitBill(
                   '',
                   '',
                   '',
                   '',
                   '',
                   '',
-                  choultry['id'].toString(),
+                  '',
+                  '',
+                  bill['id'].toString(),
                   'delete',
                 );
                 Navigator.of(context).pop(); // Close the dialog
@@ -258,56 +283,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.blue,
-        toolbarHeight: 70,
-        centerTitle: true,
-        elevation: 0,
-        title: const Text(
-          "Choultries",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        backgroundColor: Colors.blue.shade100,
+        title: const Text('Billing Form'),
+        //   actions: [
+        //     IconButton(
+        //       icon: Icon(Icons.add), // Add your custom icon here
+        //       onPressed: () {
+        //         // Add functionality for saving form data here
+        //         print('Form data saved');
+        //       },
+        //     ),
+        //   ],
       ),
-
-      // body: ListView.builder(
-      //   itemCount: _data.length,
-      //   itemBuilder: (context, index) {
-      //     _data[index]['httpMethod'] = 'delete';
-      //     return ListTile(
-      //       title: Text(_data[index]['name']),
-      //       trailing: Row(
-      //         mainAxisSize: MainAxisSize.min,
-      //         children: [
-      //           IconButton(
-      //             icon: Icon(Icons.edit),
-      //             onPressed: () {
-      //               formChoultry(_data[index]);
-      //             },
-      //           ),
-      //           IconButton(
-      //             icon: Icon(Icons.delete),
-      //             onPressed: () {
-      //                 submitChoultry(
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   '',
-      //                   _data[index]['id'].toString(),
-      //                   'delete'
-      //                 );
-      //             },
-      //           ),
-      //         ],
-      //       ),
-      //     );
-      //   },
-      // ),
       body: SingleChildScrollView(
         child: DataTable(
           columns: const [
@@ -317,23 +305,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ],
           rows: _data.asMap().entries.map<DataRow>((entry) {
             final index = entry.key;
-            final choultry = entry.value;
-            choultry['httpMethod'] = 'delete';
+            final bill = entry.value;
+            bill['httpMethod'] = 'delete';
             return DataRow(cells: [
               DataCell(Text((index + 1).toString())),
               DataCell(
                 GestureDetector(
                   onTap: () {
-                    // Navigate to the next page when name is clicked
+                    // Navigate to the next page when customer_name is clicked
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            const DashboardScreen(),
+                        builder: (context) => const BillingForm(),
                       ),
                     );
                   },
-                  child: Text(choultry['name']),
+                  child: Text(bill['customer_name']),
                 ),
               ),
               DataCell(Row(
@@ -342,13 +329,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   IconButton(
                     icon: Icon(Icons.edit),
                     onPressed: () {
-                      formChoultry(choultry);
+                      formBill(bill);
                     },
                   ),
                   IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () {
-                      deleteConfirmation(choultry, context);
+                      deleteConfirmation(bill, context);
                     },
                   ),
                 ],
@@ -357,11 +344,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           }).toList(),
         ),
       ),
-
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Open a dialog to enter choultry details
-          formChoultry({});
+          // Open a dialog to enter bill details
+          formBill({});
         },
         child: Icon(Icons.add),
       ),

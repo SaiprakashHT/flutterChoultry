@@ -26,7 +26,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if(_phone.isNotEmpty && _password.isNotEmpty){
       http.Response response = await AuthServices.login(_phone, _password);
       Map responseMap = jsonDecode(response.body);
-      // debugPrint('responseMap $responseMap');
+      debugPrint('responseMap $responseMap');
       // log('Data : $Url');
       const storage = FlutterSecureStorage();
       await storage.write(key: 'access_token', value: responseMap["token"]); 
